@@ -1,4 +1,8 @@
-﻿using Dominio.TDD.Test._Util;
+﻿using Bogus;
+using Dominio.TDD.Cursos;
+using Dominio.TDD.Enums;
+using Dominio.TDD.Test._Builders;
+using Dominio.TDD.Test._Util;
 using ExpectedObjects;
 using System;
 using Xunit;
@@ -10,6 +14,7 @@ namespace Dominio.TDD.Test.Dominio
     {
         private readonly ITestOutputHelper _output;
         private readonly string _nome;
+        private readonly string _descricao;
         private readonly double _cargaHoraria;
         private readonly PublicoAlvo _publicoAlvo;
         private readonly double _valor;
@@ -17,10 +22,13 @@ namespace Dominio.TDD.Test.Dominio
         public DominioTest(ITestOutputHelper output)
         {
             _output = output;
-            _nome = "Mundo C#/.Net";
-            _cargaHoraria = 210.0;
+            var faker = new Faker();
+
+            _nome = faker.Random.Word();
+            _descricao = faker.Lorem.Paragraph();
+            _cargaHoraria = faker.Random.Double(50, 100);
             _publicoAlvo = PublicoAlvo.Estudante;
-            _valor = 950.8;
+            _valor = faker.Random.Double(50, 100);
         }
 
         public void Dispose()
@@ -33,15 +41,17 @@ namespace Dominio.TDD.Test.Dominio
         {
             //Organização
             string nome = _nome;
+            string descricao = _descricao;
             double cargaHoraria = _cargaHoraria;
             var publicoAlvo = _publicoAlvo;
             double valor = _valor;
 
             //Ação
-            var curso = new Curso(nome, cargaHoraria, publicoAlvo, valor);
+            var curso = new Curso(nome, descricao, cargaHoraria, publicoAlvo, valor);
 
             //Assert
             Assert.Equal(nome, curso.Nome);
+            Assert.Equal(descricao, curso.Descricao);
             Assert.Equal(cargaHoraria, curso.CargaHoraria);
             Assert.Equal(PublicoAlvo.Estudante, publicoAlvo);
             Assert.Equal(valor, curso.Valor);
@@ -54,13 +64,14 @@ namespace Dominio.TDD.Test.Dominio
             var cursoEsperado = new
             {
                 Nome = _nome,
+                Descricao =  _descricao,
                 CargaHoraria = _cargaHoraria,
                 PublicoAlvo = _publicoAlvo,
                 Valor = _valor
             };
 
             //Ação
-            var curso = new Curso(cursoEsperado.Nome, cursoEsperado.CargaHoraria, cursoEsperado.PublicoAlvo, cursoEsperado.Valor);
+            var curso = new Curso(cursoEsperado.Nome, cursoEsperado.Descricao, cursoEsperado.CargaHoraria, cursoEsperado.PublicoAlvo, cursoEsperado.Valor);
 
             //Assert
             cursoEsperado.ToExpectedObject().ShouldMatch(curso);
@@ -72,7 +83,7 @@ namespace Dominio.TDD.Test.Dominio
         public void NaoDeveCursoTerNomeInvalido(string nomeInvalido)
         {
            Assert.Throws<ArgumentException>(() =>
-                new Curso(nomeInvalido,_cargaHoraria, _publicoAlvo, _valor))
+               CursoBuilder.Novo().ComNome(nomeInvalido).Build())
                 .ComMensagem("Nome é inválido");
         }
 
@@ -84,7 +95,7 @@ namespace Dominio.TDD.Test.Dominio
         public void NaoDeveCursoTerCargaHorariaMenorQueZero(double cargaHoraria)
         {
             Assert.Throws<ArgumentException>(() =>
-                new Curso(_nome, cargaHoraria, _publicoAlvo, _valor))
+                CursoBuilder.Novo().ComCargaHoraria(cargaHoraria).Build())
                 .ComMensagem("Carga Horária inválida");
         }
 
@@ -96,41 +107,8 @@ namespace Dominio.TDD.Test.Dominio
         public void NaoDeveCursoTerValorMenorQueUm(double valorInvalido)
         {
             Assert.Throws<ArgumentException>(() =>
-                new Curso(_nome, _cargaHoraria, _publicoAlvo, valorInvalido))
+                CursoBuilder.Novo().ComValor(valorInvalido).Build())
                 .ComMensagem("Valor Inválido");
         }
-    }
-
-    internal class Curso
-    {
-        public Curso(string nome, double cargaHoraria, PublicoAlvo publicoAlvo, double valor)
-        {
-            if (string.IsNullOrEmpty(nome))
-                throw new ArgumentException("Nome é inválido");
-
-            if(cargaHoraria < 1)
-                throw new ArgumentException("Carga Horária inválida");
-
-            if(valor < 1)
-                throw new ArgumentException("Valor Inválido");
-
-            Nome = nome;
-            CargaHoraria = cargaHoraria;
-            PublicoAlvo = publicoAlvo;
-            Valor = valor;
-        }
-
-        public string Nome { get; private set; }
-        public double CargaHoraria { get; private set; }
-        public PublicoAlvo PublicoAlvo { get; private set; }
-        public double Valor { get; private set; }
-    }
-
-    internal enum PublicoAlvo
-    {
-        Estudante,
-        Universtário,
-        Empregado,
-        Empreendedor
     }
 }

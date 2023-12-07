@@ -1,4 +1,5 @@
-﻿using Dominio.TDD.Test.Dominio;
+﻿using Dominio.TDD.Cursos;
+using Dominio.TDD.Enums;
 
 namespace Dominio.TDD.Test._Builders
 {
@@ -37,6 +38,11 @@ namespace Dominio.TDD.Test._Builders
         {
             _valor = valor;
             return this;
+        }
+
+        public Curso Build()
+        {
+            return new Curso(_nome, _descricao, _cargaHoraria, _publicoAlvo, _valor);
         }
     }
 }
